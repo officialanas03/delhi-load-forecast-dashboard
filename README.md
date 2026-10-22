@@ -27,11 +27,23 @@ Data every 5 minutes is very detailed and noisy. I converted it to hourly averag
 
 Before building any model, I plotted the data to see what patterns exist. This is what I found.
 
+**Load over the years**
+
+![Delhi electricity load over time](reports/figures/load_over_time.png)
+
+The data covers about three years, from April 2023 to January 2026. The same shape repeats every year: load rises through spring, stays high in summer and drops in winter. Summer peaks were about 7,000 to 7,300 MW in 2023 and about 8,300 to 8,500 MW in 2024 and 2025. Winter lows are around 1,500 to 2,000 MW. I did not see any long gaps in the data. Because the peaks grew between 2023 and 2024, I will test the model on the most recent months.
+
 **Daily pattern**
 
 ![Average load by hour of day](reports/figures/load_by_hour.png)
 
 Load is lowest around 4 AM (about 3,450 MW on average). It rises quickly from 5 to 10 AM, stays high through the afternoon at about 4,700 to 4,850 MW, and peaks near 3 PM.
+
+**Weekdays vs weekends**
+
+![Average load by hour, weekday vs weekend](reports/figures/load_weekday_vs_weekend.png)
+
+Weekday load is higher than weekend load from about 6 AM to 11 PM, by up to about 425 MW (around 4,960 MW against 4,535 MW at 3 PM). Between midnight and 5 AM the two are almost the same. The morning rise also starts earlier on weekdays. Both curves show a small dip at 1 PM.
 
 **Seasonal pattern**
 
