@@ -1,0 +1,7 @@
+,Test period,MAPE (%),RMSE (MW),MAE (MW)
+Same hour last week,Winter (2025-10-14 to 2026-01-12),5.65,253.06,188.31
+Linear regression per hour,Winter (2025-10-14 to 2026-01-12),10.63,419.54,353.63
+Gradient boosting (scikit-learn),Winter (2025-10-14 to 2026-01-12),3.87,185.19,127.68
+Same hour last week,Summer (2025-05-15 to 2025-08-13),11.17,809.55,641.25
+Linear regression per hour,Summer (2025-05-15 to 2025-08-13),6.52,473.1,376.4
+Gradient boosting (scikit-learn),Summer (2025-05-15 to 2025-08-13),5.65,422.41,319.22

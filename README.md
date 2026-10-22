@@ -87,12 +87,50 @@ Two limits to keep in mind. The test period is winter only, so these numbers say
 
 So the score to beat is about 5.65%. My next model will also use recent load values.
 
+### Step 5: A stronger model
+
+The baselines showed that last week's load is a strong starting point, but it gets worse when the weather changes. So for the next model I kept last week's load as the starting point and let the model learn how much to adjust it.
+
+It is a gradient boosting model. Instead of predicting the load directly, it predicts the change from the same hour last week and adds that to last week's value. I used the scikit-learn version, because XGBoost did not load on my Mac. The inputs are the hour, day of week, month, temperature, humidity, the temperature change compared with last week, the load 24, 48 and 168 hours ago, and the average load of the last 7 days. Every load input is at least a day old, so this works as a day-ahead forecast.
+
+I tested it on two periods, each time training only on data from before the test period.
+
+**Winter test (14 October 2025 to 12 January 2026)**
+
+| Method | Average error (MAPE) | Typical error (RMSE) | Average error in MW (MAE) |
+| --- | --- | --- | --- |
+| Same hour last week | 5.65% | 253 MW | 188 MW |
+| Linear regression per hour | 10.63% | 420 MW | 354 MW |
+| Gradient boosting | 3.87% | 185 MW | 128 MW |
+
+**Summer test (15 May to 13 August 2025)**
+
+| Method | Average error (MAPE) | Typical error (RMSE) | Average error in MW (MAE) |
+| --- | --- | --- | --- |
+| Same hour last week | 11.17% | 810 MW | 641 MW |
+| Linear regression per hour | 6.52% | 473 MW | 376 MW |
+| Gradient boosting | 5.65% | 422 MW | 319 MW |
+
+![Forecasts vs actual load in winter and summer](reports/figures/model_forecast.png)
+
+What I found:
+
+- Gradient boosting was the best method in both seasons. Compared with "same hour last week", its average error is about a third lower in winter and about half in summer.
+- "Same hour last week" does badly in summer. In early August it overshoots the real load by more than 1,000 MW on some days. My guess is that summer weather changes a lot from week to week, so last week is a poor guide. I have not checked this.
+- The per-hour regression was the second best in summer but the worst in winter.
+- Even the best model is still off by about 4 to 6% on average, so it is useful but not perfect.
+
+Limits to keep in mind:
+
+- The models use the real temperature and humidity of each day, as if the weather forecast were perfect. With a real forecast the errors would be higher.
+- I tested only two periods, and I did not model public holidays or festivals.
+- I did not tune the model much. This is a first working version.
+
 ## What I plan to do next
 
-1. Build a stronger model (XGBoost or LSTM) that also uses recent load values, and compare it with these baselines.
-2. Add a rule that flags expected peak-demand hours.
-3. Build a Streamlit dashboard to show forecasts and alerts.
-4. Deploy the dashboard and write up the results.
+1. Add a rule that flags expected peak-demand hours.
+2. Build a Streamlit dashboard to show forecasts and alerts.
+3. Deploy the dashboard and write up the results.
 
 ## Progress
 
@@ -100,7 +138,7 @@ So the score to beat is about 5.65%. My next model will also use recent load val
 - [x] Cleaned and merged the data
 - [x] Studied the patterns in the data
 - [x] Baseline forecasting models
-- [ ] Stronger forecasting model
+- [x] Stronger forecasting model
 - [ ] Peak-demand alerts
 - [ ] Dashboard
 - [ ] Deployment and write-up
@@ -111,6 +149,7 @@ So the score to beat is about 5.65%. My next model will also use recent load val
 - `src/preprocess.py` cleans and merges the data
 - `src/eda.py` creates the charts in `reports/figures/`
 - `src/baseline_model.py` builds and scores the baseline forecasts
+- `src/xgb_model.py` builds the stronger model and compares it with the baselines
 - `app/` will contain the dashboard
 - `notebooks/` and `models/` are for the modelling work
 
@@ -123,3 +162,4 @@ The raw data files are not stored in this repository. Download the load CSV from
     python src/preprocess.py
     python src/eda.py
     python src/baseline_model.py
+    python src/xgb_model.py
