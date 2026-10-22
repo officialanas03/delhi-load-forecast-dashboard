@@ -31,7 +31,7 @@ Before building any model, I plotted the data to see what patterns exist. This i
 
 ![Delhi electricity load over time](reports/figures/load_over_time.png)
 
-The data covers about three years, from April 2023 to January 2026. The same shape repeats every year: load rises through spring, stays high in summer and drops in winter. Summer peaks were about 7,000 to 7,300 MW in 2023 and about 8,300 to 8,500 MW in 2024 and 2025. Winter lows are around 1,500 to 2,000 MW. I did not see any long gaps in the data. Because the peaks grew between 2023 and 2024, I will test the model on the most recent months.
+The data covers about three years, from April 2023 to January 2026. The same shape repeats every year: load rises through spring, stays high in summer and drops in winter. Summer peaks were about 7,000 to 7,300 MW in 2023 and about 8,300 to 8,500 MW in 2024 and 2025. Winter lows are around 1,500 to 2,000 MW. The data has a few short gaps. The longest one I noticed is about a day and a half in early January 2026, and those hours are left out when scoring the models. Because the peaks grew between 2023 and 2024, I test the models on the most recent months.
 
 **Daily pattern**
 
@@ -55,24 +55,51 @@ Summer is the heaviest season. June has the highest average load (about 5,750 MW
 
 ![Daily average load vs temperature](reports/figures/load_vs_temperature.png)
 
-Load is lowest when the daily average temperature is between 17 and 23 degrees C (about 3,000 MW). Above 25 degrees it rises steeply, reaching about 7,000 MW near 38 to 39 degrees. It also rises a little below 12 degrees, probably because of heating.
+Load is lowest when the daily average temperature is between 17 and 23 degrees C (about 3,000 MW). Above 25 degrees it rises steeply, reaching about 7,000 to 7,400 MW at 37 to 39 degrees. It also rises a little below 12 degrees, probably because of heating.
 
 The points are quite spread out. At the same temperature, daily load can differ by a few thousand MW. So temperature alone is not enough, and the model will also use humidity, hour, day of the week and month.
 
+### Step 4: Baseline forecasts
+
+Before building a proper model, I wanted a simple score to beat. I kept the last 90 days of data (15 October 2025 to 12 January 2026) aside and trained on everything before it. Then I tried three simple methods:
+
+- **Same hour last week:** predict each hour with the load from the same hour one week earlier. No learning at all.
+- **Linear regression:** one model using hour, weekday, month, temperature and humidity.
+- **Linear regression per hour:** a separate regression for each hour of the day.
+
+| Method | Average error (MAPE) | Typical error (RMSE) |
+| --- | --- | --- |
+| Same hour last week | 5.65% | 253 MW |
+| Linear regression | 16.87% | 683 MW |
+| Linear regression per hour | 10.54% | 417 MW |
+
+I scored 2,118 hours. Hours with missing data were left out.
+
+![Baseline forecasts vs actual load](reports/figures/baseline_forecast.png)
+
+What I learned:
+
+- The simple "same hour last week" method was the best of the three. I did not expect that.
+- The single regression was the worst. It uses one daily shape for the whole year, but Delhi's winter days swing much more than summer days.
+- Giving each hour its own regression cut the error from 16.9% to 10.5% and followed the daily shape much better. It still stayed a little below the real peaks. My guess is that it does not know that load has grown over the years, while "same hour last week" automatically follows the current level. I have not tested this yet.
+
+Two limits to keep in mind. The test period is winter only, so these numbers say nothing about summer. And the regressions use the real temperature of each day, as if the weather forecast were perfect.
+
+So the score to beat is about 5.65%. My next model will also use recent load values.
+
 ## What I plan to do next
 
-1. Build a simple baseline forecast (SARIMA or Prophet).
-2. Build a stronger model (XGBoost or LSTM) and compare it with the baseline.
-3. Add a rule that flags expected peak-demand hours.
-4. Build a Streamlit dashboard to show forecasts and alerts.
-5. Deploy the dashboard and write up the results.
+1. Build a stronger model (XGBoost or LSTM) that also uses recent load values, and compare it with these baselines.
+2. Add a rule that flags expected peak-demand hours.
+3. Build a Streamlit dashboard to show forecasts and alerts.
+4. Deploy the dashboard and write up the results.
 
 ## Progress
 
 - [x] Collected load and weather data
 - [x] Cleaned and merged the data
 - [x] Studied the patterns in the data
-- [ ] Baseline forecasting model
+- [x] Baseline forecasting models
 - [ ] Stronger forecasting model
 - [ ] Peak-demand alerts
 - [ ] Dashboard
@@ -83,6 +110,7 @@ The points are quite spread out. At the same temperature, daily load can differ 
 - `src/fetch_data.py` downloads the weather data and checks the load file
 - `src/preprocess.py` cleans and merges the data
 - `src/eda.py` creates the charts in `reports/figures/`
+- `src/baseline_model.py` builds and scores the baseline forecasts
 - `app/` will contain the dashboard
 - `notebooks/` and `models/` are for the modelling work
 
@@ -94,3 +122,4 @@ The raw data files are not stored in this repository. Download the load CSV from
     python src/fetch_data.py
     python src/preprocess.py
     python src/eda.py
+    python src/baseline_model.py

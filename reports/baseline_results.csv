@@ -1,0 +1,4 @@
+,MAPE (%),RMSE (MW),MAE (MW)
+Same hour last week,5.65,253.12,188.37
+Linear regression,16.87,682.82,557.73
+Linear regression per hour,10.54,416.8,351.26

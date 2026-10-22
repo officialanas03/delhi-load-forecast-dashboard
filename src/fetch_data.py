@@ -71,7 +71,7 @@ def load_raw_load_data(filename: str = "delhi_load_raw.csv") -> pd.DataFrame:
 
 if __name__ == "__main__":
     print("Fetching weather data for Delhi...")
-    weather_df = fetch_weather("2019-01-01", "2024-12-31")
+    weather_df = fetch_weather("2023-04-01", "2026-01-31")
     weather_path = RAW_DIR / "delhi_weather_raw.csv"
     weather_df.to_csv(weather_path, index=False)
     print(f"Saved weather data -> {weather_path} ({len(weather_df)} rows)")
