@@ -4,7 +4,7 @@
 
 I am an M.Tech student in Electrical Power Systems and Management at Jamia Millia Islamia, Delhi. Earlier, I completed an economic dispatch project using real grid data and transmission losses. That project worked out the cheapest way to supply a load, but it started with the load already known.
 
-This raised a simple question for me: where does that load figure come from? In a real grid, operators do not know tomorrow's demand in advance. They have to forecast it. I decided to build my next project around this question, and I chose Delhi because it is my home city and its demand changes a lot between seasons.
+This raised a simple question for me: where does that load figure come from? In a real grid, operators do not know tomorrow's demand in advance. They have to forecast it. I decided to build my next project around this question, and I chose Delhi because i am doing my masters from here and its demand changes a lot between seasons.
 
 The aim is to forecast Delhi's electricity demand from past load and weather data, and to show the result in a simple dashboard that marks expected peak hours.
 
@@ -14,8 +14,8 @@ The aim is to forecast Delhi's electricity demand from past load and weather dat
 
 I used two sources:
 
-- **Load data:** Delhi's electricity demand recorded every 5 minutes, starting from April 2023. I downloaded it from a Kaggle dataset of Delhi SLDC data. It has about 293,000 rows.
-- **Weather data:** daily temperature and humidity for Delhi, taken from the Open-Meteo API with a small Python script.
+- **Load data: Delhi's electricity demand recorded every 5 minutes, starting from April 2023. I downloaded it from a Kaggle dataset of Delhi SLDC data. It has about 293,000 rows.
+- **Weather data:daily temperature and humidity for Delhi, taken from the Open-Meteo API with a small Python script.
 
 I chose weather data because temperature is expected to affect demand strongly. People use more air conditioners in summer and heaters in winter.
 
@@ -27,19 +27,19 @@ Data every 5 minutes is very detailed and noisy. I converted it to hourly averag
 
 Before building any model, I plotted the data to see what patterns exist. This is what I found.
 
-**Daily pattern**
+//Daily pattern
 
 ![Average load by hour of day](reports/figures/load_by_hour.png)
 
 Load is lowest around 4 AM (about 3,450 MW on average). It rises quickly from 5 to 10 AM, stays high through the afternoon at about 4,700 to 4,850 MW, and peaks near 3 PM.
 
-**Seasonal pattern**
+//Seasonal pattern**
 
 ![Average load by month](reports/figures/load_by_month.png)
 
 Summer is the heaviest season. June has the highest average load (about 5,750 MW), and May to September all stay high. February, March and November are the lowest, at about 3,050 to 3,100 MW.
 
-**Effect of temperature**
+//Effect of temperature
 
 ![Daily average load vs temperature](reports/figures/load_vs_temperature.png)
 
