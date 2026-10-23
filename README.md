@@ -126,11 +126,43 @@ Limits to keep in mind:
 - I tested only two periods, and I did not model public holidays or festivals.
 - I did not tune the model much. This is a first working version.
 
+### Step 6: What the model relies on
+
+To see which inputs the model uses most, I shuffled each input one at a time on the winter test data and measured how much the average error grew. A bigger increase means the model relies on that input more.
+
+![Feature importance](reports/figures/model_feature_importance.png)
+
+- The load from the same hour last week (about 335 MW increase) and from 24 hours earlier (about 276 MW) matter far more than anything else.
+- Weather matters, but much less. The daily maximum temperature is the strongest weather input (about 32 MW), followed by the temperature change compared with last week (about 16 MW).
+- Several inputs overlap, for example the three temperature columns and the lagged loads, so a single input can look less important than it really is. This chart is also from the winter test only.
+
+### Step 7: Peak alerts and the dashboard
+
+The last part turns the forecast into something a grid operator could look at. I built a Streamlit dashboard that replays the model's day-ahead forecasts for about nine months (1 April 2025 to 12 January 2026). The model was trained only on data before 1 April 2025, so it had not seen any of these hours.
+
+Over the whole nine months the average error is 4.88% for the model and 9.76% for "same hour last week".
+
+![Dashboard screenshot](reports/figures/dashboard.png)
+
+The dashboard has three tabs:
+
+- **Forecast:** actual load, the forecast and "same hour last week" on one chart, with a threshold line and red dots on the hours forecast above it.
+- **Peak alerts:** the days with forecast hours above the threshold. Each alert has a level (Low under 5% above the threshold, Medium 5% to 10%, High 10% or more) and a suggested action, for example asking large consumers to move load away from the peak hours. It also checks the alerts against what really happened: how many real peak days were caught, and how many were false alarms or missed.
+- **About:** the data, the model and the limits.
+
+The peak threshold and the date range can be changed in the sidebar. By default the threshold is 6,400 MW, which is the 95th percentile of the load in the training data.
+
+Limits: the alert levels and actions are simple examples that I made up. I have not tested them on a real grid. The dashboard replays past data and is not a live feed.
+
+To run it:
+
+    python src/make_dashboard_data.py
+    streamlit run app/dashboard.py
+
 ## What I plan to do next
 
-1. Add a rule that flags expected peak-demand hours.
-2. Build a Streamlit dashboard to show forecasts and alerts.
-3. Deploy the dashboard and write up the results.
+1. Put the dashboard online so it can be opened from a link.
+2. Try holidays and festivals as inputs, and test with a real weather forecast instead of the actual weather.
 
 ## Progress
 
@@ -139,9 +171,10 @@ Limits to keep in mind:
 - [x] Studied the patterns in the data
 - [x] Baseline forecasting models
 - [x] Stronger forecasting model
-- [ ] Peak-demand alerts
-- [ ] Dashboard
-- [ ] Deployment and write-up
+- [x] Peak-demand alerts
+- [x] Dashboard
+- [x] Write-up
+- [ ] Put the dashboard online
 
 ## Project files
 
@@ -150,7 +183,8 @@ Limits to keep in mind:
 - `src/eda.py` creates the charts in `reports/figures/`
 - `src/baseline_model.py` builds and scores the baseline forecasts
 - `src/xgb_model.py` builds the stronger model and compares it with the baselines
-- `app/` will contain the dashboard
+- `src/make_dashboard_data.py` prepares the forecast data that the dashboard reads
+- `app/dashboard.py` is the Streamlit dashboard and `app/demand_response.py` holds the peak alert rules
 - `notebooks/` and `models/` are for the modelling work
 
 ## How to run it
@@ -163,3 +197,5 @@ The raw data files are not stored in this repository. Download the load CSV from
     python src/eda.py
     python src/baseline_model.py
     python src/xgb_model.py
+    python src/make_dashboard_data.py
+    streamlit run app/dashboard.py

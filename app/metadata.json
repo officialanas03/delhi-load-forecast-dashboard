@@ -1,0 +1,10 @@
+{
+  "model_name": "Gradient boosting (scikit-learn)",
+  "train_end": "2025-03-31",
+  "start": "2025-04-01",
+  "end": "2026-01-12",
+  "default_threshold": 6400,
+  "mape_model": 4.88,
+  "mape_last_week": 9.76,
+  "hours_scored": 6788
+}

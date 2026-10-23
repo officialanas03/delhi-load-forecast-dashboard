@@ -1,11 +1,9 @@
 pandas
 numpy
 matplotlib
-seaborn
 requests
 scikit-learn
-xgboost
-prophet
-statsmodels
 streamlit
 plotly
+# optional, used by src/xgb_model.py if it installs on your computer:
+# xgboost

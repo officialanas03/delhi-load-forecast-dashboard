@@ -35,6 +35,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from pathlib import Path
 from sklearn.linear_model import LinearRegression
+from sklearn.inspection import permutation_importance
 
 from baseline_model import load_data, build_features, score
 
@@ -141,7 +142,8 @@ def evaluate_window(df, X_reg, X_gb, start, end):
     ).T.round(2)
 
     preds = {"naive": pred_naive, "hourly": pred_hourly, "gb": pred_gb}
-    return results, preds, model, int(common.sum())
+    eval_data = (X_gb[common], (y - last_week)[common])
+    return results, preds, model, int(common.sum()), eval_data
 
 
 def plot_forecasts(df, windows_out):
@@ -170,14 +172,29 @@ def plot_forecasts(df, windows_out):
     plt.close(fig)
 
 
-def plot_importance(model, feature_names):
-    if not hasattr(model, "feature_importances_"):
-        return False
-    imp = pd.Series(model.feature_importances_, index=feature_names).sort_values()
+def plot_importance(model, X_eval, y_eval):
+    """Show which inputs matter most.
+
+    If the model reports its own importance values (XGBoost does), use them.
+    Otherwise shuffle each input one at a time and measure how much the average
+    error grows. A bigger increase means the model relies on that input more.
+    """
+    if hasattr(model, "feature_importances_"):
+        values = model.feature_importances_
+        label = "Importance (XGBoost)"
+    else:
+        result = permutation_importance(
+            model, X_eval, y_eval, n_repeats=5, random_state=42,
+            scoring="neg_mean_absolute_error",
+        )
+        values = result.importances_mean
+        label = "Increase in average error (MW) when the input is shuffled"
+
+    imp = pd.Series(values, index=X_eval.columns).sort_values()
     plt.figure(figsize=(8, 5))
     plt.barh(imp.index, imp.values, color="steelblue")
-    plt.title(f"What the {MODEL_NAME} model relies on most")
-    plt.xlabel("Importance")
+    plt.title(f"What the {MODEL_NAME} model relies on most (winter test)")
+    plt.xlabel(label)
     plt.tight_layout()
     plt.savefig(FIGURES_DIR / "model_feature_importance.png", dpi=150)
     plt.close()
@@ -200,12 +217,13 @@ def main():
     all_results = []
     windows_out = {}
     importance_model = None
+    importance_data = None
 
     for name, (start, end) in windows.items():
         if start < df.index.min() or end > df.index.max():
             print(f"\nSkipping {name}: dates are outside the data.")
             continue
-        results, preds, model, n_hours = evaluate_window(df, X_reg, X_gb, start, end)
+        results, preds, model, n_hours, eval_data = evaluate_window(df, X_reg, X_gb, start, end)
         print(f"\n{name} test period: {start.date()} to {end.date()} ({n_hours} hours scored)\n")
         print(results.to_string())
 
@@ -215,13 +233,14 @@ def main():
         windows_out[name] = (start, end, preds)
         if name == "Winter":
             importance_model = model
+            importance_data = eval_data
 
     pd.concat(all_results).to_csv(REPORTS_DIR / "model_results.csv")
     plot_forecasts(df, windows_out)
     print(f"\nSaved results -> {REPORTS_DIR / 'model_results.csv'}")
     print(f"Saved chart   -> {FIGURES_DIR / 'model_forecast.png'}")
 
-    if importance_model is not None and plot_importance(importance_model, list(X_gb.columns)):
+    if importance_model is not None and plot_importance(importance_model, *importance_data):
         print(f"Saved chart   -> {FIGURES_DIR / 'model_feature_importance.png'}")
 
 
